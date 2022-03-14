@@ -1,43 +1,46 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
+plugins {
+    id 'application'
+}
 
-version = '1.0'
+repositories {
+    mavenCentral()
+}
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-//create a single Jar with all dependencies
-task build_custom(type: Jar) {
-	manifest {
-        attributes 'Implementation-Title': 'Gradle Jar File Example',
-                'Implementation-Version': version,
-                'Main-Class': 'com.test.Project'
-    }
-    baseName = 'BuildGradle'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
-}
-
-task test_custom(type: Test, dependsOn: build_custom){
-        useJUnit()
-        testLogging {events "passed","failed"}
-}
-
-
-task hello (dependsOn: test_custom) {
-        doLast{
-             println "Hello is WORK!"
-        }
-}
-
-//Get dependencies from Maven central repository
-repositories {
-    mavenCentral()
-    jcenter()
-}
-
-//Project dependencies
 dependencies {
-      compile group: 'org.apache.logging.log4j', name: 'log4j-1.2-api', version: '2.4.1'
-      implementation 'org.apache.commons:commons-collections4:4.0'
-      testImplementation "junit:junit:4.12"
+    testImplementation 'junit:junit:4.13.2'
+    implementation 'com.google.guava:guava:30.1.1-jre'
+    implementation 'org.apache.commons:commons-collections4:4.4'
+    implementation 'log4j:log4j:1.2.17'
+}
+
+application {
+    mainClass = 'com.test.Project'
+}
+
+jar {
+    archiveBaseName = 'ci-training'
+    archiveVersion =  '1.0'
+}
+
+task "build-custom" {
+    doLast{
+        println "Task build-custom"
+    }
+}
+
+task "test-custom" {
+    dependsOn ':home-task:build-custom'
+    doLast{
+        println "Task test-custom"
+    }
+}
+
+task hello {
+    dependsOn ':home-task:test-custom'
+    doLast{
+        println "Task hello"
+    }
 }
