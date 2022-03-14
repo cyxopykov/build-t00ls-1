@@ -25,22 +25,18 @@ jar {
     archiveVersion =  '1.0'
 }
 
-task "build-custom" {
-    doLast{
-        println "Task build-custom"
-    }
+task "build-custom" (type:Exec) {
+    commandLine "gradle", "build"
 }
 
-task "test-custom" {
+task "test-custom" (type:Exec){
     dependsOn ':home-task:build-custom'
-    doLast{
-        println "Task test-custom"
-    }
+    commandLine "gradle", "test"
 }
 
 task hello {
     dependsOn ':home-task:test-custom'
-    doLast{
+    doLast {
         println "Task hello"
     }
 }
