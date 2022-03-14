@@ -2,45 +2,42 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 
 version = '1.0'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
-task buildcustom ( type: Jar) {
+//create a single Jar with all dependencies
+task build_custom(type: Jar) {
 	manifest {
-        attributes 'Implementation-Title': 'Gradle Jar File Example',  
-        	'Implementation-Version': version,
-        	'Main-Class': 'com.test.Project'
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+                'Implementation-Version': version,
+                'Main-Class': 'com.test.Project'
     }
-    baseName = "hw3-app"
+    baseName = 'BuildGradle'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
 
-task testcustom ( type: Test, dependsOn: buildcustom) {
+task test_custom(type: Test, dependsOn: build_custom){
         useJUnit()
-        testLogging {
-        events "started", "passed", "skipped", "failed"
-    }
+        testLogging {events "passed","failed"}
 }
 
 
-task hello (type: JavaExec, dependsOn: testcustom) {
-    group = "Execution"
-    description = "Run the main class with JavaExecTask"
-    classpath = sourceSets.main.runtimeClasspath
-    main = 'com.test.Project'
+task hello (dependsOn: test_custom) {
+        doLast{
+             println "Hello is WORK!"
+        }
 }
 
-repositories { 
-    mavenCentral() 
+//Get dependencies from Maven central repository
+repositories {
+    mavenCentral()
     jcenter()
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
+//Project dependencies
 dependencies {
-    implementation "joda-time:joda-time:2.2"
-    implementation 'org.apache.commons:commons-collections4:4.0'
-    compile 'org.slf4j:slf4j-api:1.7.12'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-1.2-api', version: '2.4.1'
-    testImplementation "junit:junit:4.12"
+      compile group: 'org.apache.logging.log4j', name: 'log4j-1.2-api', version: '2.4.1'
+      implementation 'org.apache.commons:commons-collections4:4.0'
+      testImplementation "junit:junit:4.12"
 }
