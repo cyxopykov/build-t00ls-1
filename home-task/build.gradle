@@ -1,0 +1,46 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+version = '1.0'
+
+task buildcustom ( type: Jar) {
+	manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',  
+        	'Implementation-Version': version,
+        	'Main-Class': 'com.test.Project'
+    }
+    baseName = "hw3-app"
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+task testcustom ( type: Test, dependsOn: buildcustom) {
+        useJUnit()
+        testLogging {
+        events "started", "passed", "skipped", "failed"
+    }
+}
+
+
+task hello (type: JavaExec, dependsOn: testcustom) {
+    group = "Execution"
+    description = "Run the main class with JavaExecTask"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'com.test.Project'
+}
+
+repositories { 
+    mavenCentral() 
+    jcenter()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    implementation "joda-time:joda-time:2.2"
+    implementation 'org.apache.commons:commons-collections4:4.0'
+    compile 'org.slf4j:slf4j-api:1.7.12'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-1.2-api', version: '2.4.1'
+    testImplementation "junit:junit:4.12"
+}
