@@ -16,7 +16,7 @@
         <repository>
             <id>deploy-repo</id>
             <name>Internal Repository</name>
-            <url>http://192.168.56.2:8081/repository/asukharukau-maven-proxy/</url>
+            <url>http://192.168.56.2:8081/repository/maven-asukharukau/</url>
         </repository>
     </distributionManagement>
 
