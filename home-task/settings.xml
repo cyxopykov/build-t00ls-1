@@ -87,8 +87,8 @@ under the License.
   <servers>
     <server>
       <id>nexus</id>
-      <username>admin</username>
-      <password>DevOps24</password>
+      <username>${nexus_user}</username>
+      <password>${nexus_password}</password>
     </server>
   </servers>
 </settings>
