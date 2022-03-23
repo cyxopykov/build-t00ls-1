@@ -16,8 +16,8 @@
  */
 package org.jboss.as.quickstarts.wshelloworld;
 
-import java.util.List;
-import javax.jws.WebMethod;
+import java.util.List.*;
+import javax.jws.WebMethod.*;
 import javax.jws.WebService.*;
 
 /**
