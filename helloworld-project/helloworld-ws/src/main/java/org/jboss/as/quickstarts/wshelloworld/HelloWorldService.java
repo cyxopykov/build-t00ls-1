@@ -18,7 +18,7 @@ package org.jboss.as.quickstarts.wshelloworld;
 
 import java.util.List;
 import javax.jws.WebMethod;
-import javax.jws.WebService;
+import javax.jws.WebService.*;
 
 /**
  * A simple example of how to setup a JAX-WS Web Service. It can say hello to everyone or to someone in particular.
