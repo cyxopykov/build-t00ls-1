@@ -1,0 +1,56 @@
+pipeline {
+    agent any
+
+    tools {
+        // Install the Maven version configured as "M3" and add it to the path.
+        maven "mvn3"
+    }
+
+    stages {
+        stage('Package') {
+            steps {
+                // Get some code from a GitHub repository
+                git branch: 'asukharukau-deployment-strategies', url: 'https://github.com/cyxopykov/build-t00ls-1.git'
+
+                // Run Maven on a Unix agent.
+                dir('helloworld-project/helloworld-ws/') {
+                  sh 'mvn -Dmaven.test.failure.ignore=true clean package'
+                }
+
+            }
+       }
+       
+       stage('Building image') {
+            steps{
+                sh '''
+                    docker build -f helloworld-project/helloworld-ws/Dockerfile -t 192.168.56.2:5000/helloworld-asukharukau:rc-$BUILD_NUMBER -t 192.168.56.2:5000/helloworld-asukharukau:latest .
+                    docker login -u ${nexus_user} -p ${nexus_password} 192.168.56.2:5000
+                    docker push 192.168.56.2:5000/helloworld-asukharukau:rc-$BUILD_NUMBER
+                    docker push 192.168.56.2:5000/helloworld-asukharukau:latest
+                '''
+            }
+        }
+        
+        stage('Deploy') {
+            steps{
+                sh '''
+                    prev=$(docker ps --format='{{.Image}}' -f name=helloworld-asukharukau-rc)
+                    docker ps -af name=helloworld-asukharukau-rc -q | xargs -r docker container rm -f
+                    port=$((8080+${BUILD_NUMBER}))
+                    docker run -d -p ${port}:8080 --name helloworld-asukharukau-rc-${BUILD} 192.168.56.2:5000/helloworld-asukharukau:rc-${BUILD_NUMBER}
+                    sleep 10
+                    
+                    if [[ $(curl -sSf http://192.168.56.2:${port}/helloworld-ws/ > /dev/null) ]]
+                    then
+                      docker ps -af name=helloworld-asukharukau-rc -q | xargs -r docker container rm -f
+                      #rollback 
+                      docker run -d -p ${port}:8080 --name helloworld-asukharukau-rc-${BUILD_NUMBER} $prev
+                    fi
+                    echo $prev
+                '''
+            }
+        }
+    }
+}
+    
+    
