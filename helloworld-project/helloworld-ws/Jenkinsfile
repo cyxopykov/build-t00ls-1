@@ -35,7 +35,8 @@ pipeline {
         stage('Deploy App') {
           steps {
               sh '''
-                  ls -la
+                  ls -la ./helloworld-project/helloworld-ws/
+                  cat helloworld-project/helloworld-ws/deploy.yaml
                   sed -i -e 's,<IMAGE>,192.168.56.2:5000/helloworld-asukharukau:rc-$BUILD_NUMBER,g' ./helloworld-project/helloworld-ws/deploy.yaml
                  '''
               script {
