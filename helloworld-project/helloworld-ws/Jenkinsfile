@@ -31,25 +31,19 @@ pipeline {
             }
         }
         
-        stage('Deploy') {
+        stage('Deployment ') {
             steps{
-                sh '''
-                    prev=$(docker ps --format='{{.Image}}' -f name=helloworld-asukharukau-rc)
-                    docker ps -af name=helloworld-asukharukau-rc -q | xargs -r docker container rm -f
-                    port=$((8080+${BUILD_NUMBER}))
-                    docker run -d -p ${port}:8080 --name helloworld-asukharukau-rc-${BUILD} 192.168.56.2:5000/helloworld-asukharukau:rc-${BUILD_NUMBER}
-                    sleep 10
-                    
-                    if [[ $(curl -sSf http://192.168.56.2:${port}/helloworld-ws/ > /dev/null) ]]
-                    then
-                      docker ps -af name=helloworld-asukharukau-rc -q | xargs -r docker container rm -f
-                      #rollback 
-                      docker run -d -p ${port}:8080 --name helloworld-asukharukau-rc-${BUILD_NUMBER} $prev
-                    fi
-                    echo $prev
-                '''
+                script {
+                    withKubeConfig([credentialsId: 'minikubeconfig', serverUrl: "https://192.168.49.2:8443", namespace: "default"]) {
+                        sh "sed -i -e 's,<IMAGE>,192.168.56.2:5000/helloworld-asukharukau:rc-$BUILD_NUMBER,g' ./helloworld-project/helloworld-ws/deploy.yaml"
+                        sh "kubectl apply -f ./helloworld-project/helloworld-ws/deploy.yaml "
+                    }
+                }
+                
             }
-        }
+        
+        
+        
     }
 }
     
