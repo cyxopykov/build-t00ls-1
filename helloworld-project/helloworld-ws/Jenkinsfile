@@ -38,7 +38,7 @@ pipeline {
                    sed -i -e "s,<IMAGE>,192.168.56.2:5000/helloworld-asukharukau:rc-$BUILD_NUMBER,g" ./helloworld-project/helloworld-ws/deploy.yaml
               '''
               script {
-                 kubernetesDeploy(configs: "./helloworld-project/helloworld-ws/deploy.yaml", kubeconfigId: "minikubeconfig")
+                 kubernetesDeploy(configs: "helloworld-project/helloworld-ws/deploy.yaml", kubeconfigId: "minikubeconfig")
               }
           }
         }
