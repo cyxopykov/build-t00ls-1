@@ -31,22 +31,11 @@ pipeline {
             }
         }
         
-        stage('Deployment ') {
-            steps{
-                script {
-                    withKubeConfig([credentialsId: 'minikubeconfig', serverUrl: "https://192.168.49.2:8443", namespace: "default"]) {
-                        sh "sed -i -e 's,<IMAGE>,192.168.56.2:5000/helloworld-asukharukau:rc-$BUILD_NUMBER,g' ./helloworld-project/helloworld-ws/deploy.yaml"
-                        sh "kubectl apply -f ./helloworld-project/helloworld-ws/deploy.yaml "
-                    }
-                }
                 
-            }
-        }
-        
         stage('Deploy App') {
           steps {
             dir('helloworld-project/helloworld-ws/') {
-                  sh 'sed -i -e 's,<IMAGE>,192.168.56.2:5000/helloworld-asukharukau:rc-$BUILD_NUMBER,g' deploy.yaml'
+                  sh 'sed -i -e "s,<IMAGE>,192.168.56.2:5000/helloworld-asukharukau:rc-$BUILD_NUMBER,g" deploy.yaml'
                 }
             script {
               kubernetesDeploy(configs: "./helloworld-project/helloworld-ws/deploy.yaml", kubeconfigId: "mykubeconfig")
