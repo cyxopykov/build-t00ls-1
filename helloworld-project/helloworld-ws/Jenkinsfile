@@ -91,6 +91,30 @@ pipeline {
           }
         }
         
+        stage('Archiving') {
+                    steps{
+                    script {
+                         sh "tar -czvf pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz asukharukau_dsl_script.tar.gz \
+                                                                                       helloworld-project/helloworld-ws/target/helloworld-ws.war \
+                                                                                       helloworld-project/helloworld-ws/Jenkinsfile"
+                         nexusArtifactUploader(
+                            nexusVersion: "nexus3",
+                            protocol: "http",
+                            nexusUrl: "192.168.56.2:8081",
+                            groupId: "ft",
+                            version: "${env.BUILD_NUMBER}",
+                            repository: "maven-asukharukau",
+                            credentialsId: nexusCredentialsId,
+                            artifacts: [
+                                [artifactId: "nexus-artifact-uploader",
+                                classifier: 'debug',
+                                file: "pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz",
+                                type: 'tar.gz']
+                            ] );
+                    }
+                    }
+        }
+        
         stage('Building image') {
             steps{
                 sh '''
