@@ -128,6 +128,16 @@ pipeline {
                     }
                 }
             }
+        } 
+        
+        stage('Manual approval') {
+            steps {
+                script {
+                    timeout(time:30, unit:'SECONDS') {
+                        env.APPROVE_PROD = input message: 'Deploy to Production', ok: 'Continue'
+                    }
+                }
+            }
         }
                 
         stage('Deploy App') {
