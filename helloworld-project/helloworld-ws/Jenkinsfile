@@ -1,12 +1,10 @@
 pipeline {
     agent any
-    
     environment {
         currentDate = sh(returnStdout: true, script: 'date +%Y-%m-%d').trim()
         PIPE_STAGE_NAME = ''
         ERROR_MESSAGE = ''
     }
- 
     
     tools {
         // Install the Maven version configured as "M3" and add it to the path.
@@ -30,12 +28,10 @@ pipeline {
                     ERROR_MESSAGE = "${error}"
                     throw error
                 }
-                }
+            }
+        }
+    }
 
-       }
-       
-
-        
         stage ('Scan Sonar') {
             steps{
             script {
@@ -257,7 +253,7 @@ pipeline {
           }
         }
 
-    }
+    
     
     post {
                 unsuccessful {
@@ -267,8 +263,6 @@ pipeline {
                     emailext body: "Pipeline completed successfully ${env.BUILD_URL} - ${currentDate}", subject: "Pipeline: ${currentBuild.fullDisplayName} completed successfully", to: 'anatol_sukharukau@epam.com'
                 }
     }
-    
-}
-    
+} 
 
     
