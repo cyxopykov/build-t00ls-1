@@ -140,7 +140,7 @@ pipeline {
             }
         }
                 
-        stage('Deploy App') {
+        stage('Deployment') {
           steps {
                            
               script {
