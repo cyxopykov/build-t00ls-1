@@ -90,7 +90,7 @@ pipeline {
                   ],
                   wait : true
                   copyArtifacts fingerprintArtifacts: true, 
-                    projectName: 'DSL/MNTLAB-asukharukau-child1-build-job', selector: lastSuccessful()           
+                    projectName: 'MNTLAB-asukharukau-child1-build-job', selector: lastSuccessful()           
             }
           }
         }
