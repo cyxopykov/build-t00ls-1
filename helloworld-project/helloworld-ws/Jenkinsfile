@@ -41,6 +41,7 @@ pipeline {
                             sed -i -e "s,<IMAGE>,192.168.56.2:5000/helloworld-asukharukau:rc-$BUILD_NUMBER,g" ./helloworld-project/helloworld-ws/deploy.yaml
                             curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
                             chmod u+x ./kubectl
+                            ./kubectl create secret docker-registry nexus --docker-server=192.168.56.2:5000 --docker-username=${nexus_user} --docker-password=${nexus_password}
                             ./kubectl apply -f ./helloworld-project/helloworld-ws/deploy.yaml
                         '''
                     }
