@@ -63,61 +63,61 @@ pipeline {
         stage('Testing') { 
             parallel {
                 stage('pre-integration-test') {
-                    steps{
-                    script {
-                        try {
-                            dir('helloworld-project/helloworld-ws/') {
-                                sh 'echo mvn pre-integration-test' 
+                    steps {
+                        script {
+                            try {
+                                dir('helloworld-project/helloworld-ws/') {
+                                    sh 'echo mvn pre-integration-test' 
+                                }
+                            }
+                            catch (error){
+                                PIPE_STAGE_NAME = env.STAGE_NAME 
+                                ERROR_MESSAGE = "${error}"
+                                throw error
                             }
                         }
-                        catch (error){
-                            PIPE_STAGE_NAME = env.STAGE_NAME 
-                            ERROR_MESSAGE = "${error}"
-                            throw error
-                        }
-                    }
                     }
                 }
                 
                 stage('integration-test') {
-                    steps{
-                    script {
-                        try {
-                            dir('helloworld-project/helloworld-ws/') {
-                                sh 'echo mvn integration-test' 
+                    steps {
+                        script {
+                            try {
+                                dir('helloworld-project/helloworld-ws/') {
+                                    sh 'echo mvn integration-test' 
+                                }
+                            }
+                            catch (error){
+                                PIPE_STAGE_NAME = env.STAGE_NAME 
+                                ERROR_MESSAGE = "${error}"
+                                throw error
                             }
                         }
-                        catch (error){
-                            PIPE_STAGE_NAME = env.STAGE_NAME 
-                            ERROR_MESSAGE = "${error}"
-                            throw error
-                        }
-                    }
                     }
                 }
                 
                 stage('post-integration-test') {
                     steps{
-                    script {
-                        try {
-                            dir('helloworld-project/helloworld-ws/') {
-                                sh 'echo mvn post-integration-test' 
+                        script {
+                            try {
+                                dir('helloworld-project/helloworld-ws/') {
+                                    sh 'echo mvn post-integration-test' 
+                                }
+                            }
+                            catch (error){
+                                PIPE_STAGE_NAME = env.STAGE_NAME 
+                                ERROR_MESSAGE = "${error}"
+                                throw error
                             }
                         }
-                        catch (error){
-                            PIPE_STAGE_NAME = env.STAGE_NAME 
-                            ERROR_MESSAGE = "${error}"
-                            throw error
-                        }
-                    }
                     }
                 }
             }
         }
         
         stage('Triggering job and fetching artefact') {
-          steps{
-            script{
+          steps {
+            script {
                 try {
                     build job: 'MNTLAB-asukharukau-child1-build-job', 
                       parameters: [
@@ -128,9 +128,9 @@ pipeline {
                         projectName: 'MNTLAB-asukharukau-child1-build-job', selector: lastSuccessful()   
                 }
                 catch (error){
-                            PIPE_STAGE_NAME = env.STAGE_NAME 
-                            ERROR_MESSAGE = "${error}"
-                            throw error
+                    PIPE_STAGE_NAME = env.STAGE_NAME 
+                    ERROR_MESSAGE = "${error}"
+                    throw error
                 }
             }
           }
@@ -139,33 +139,33 @@ pipeline {
         stage('Packaging and Publishing results') { 
             parallel {
                 stage('Archiving artifact') {
-                            steps{
-                            script {
-                                try {
-                                     sh "tar -czvf pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz asukharukau_dsl_script.tar.gz \
-                                                                                                   helloworld-project/helloworld-ws/target/helloworld-ws.war \
-                                                                                                   helloworld-project/helloworld-ws/Jenkinsfile"
-                                     nexusArtifactUploader(
-                                        nexusVersion: "nexus3",
-                                        protocol: "http",
-                                        nexusUrl: "192.168.56.2:8081",
-                                        groupId: "ft",
-                                        version: "${env.BUILD_NUMBER}",
-                                        repository: "maven-asukharukau",
-                                        credentialsId: 'nexusCredentialsId',
-                                        artifacts: [
-                                            [artifactId: "nexus-artifact-uploader",
-                                            classifier: 'debug',
-                                            file: "pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz",
-                                            type: 'tar.gz']
-                                        ] );
+                            steps {
+                                script {
+                                    try {
+                                        sh "tar -czvf pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz asukharukau_dsl_script.tar.gz \
+                                                                                                    helloworld-project/helloworld-ws/target/helloworld-ws.war \
+                                                                                                    helloworld-project/helloworld-ws/Jenkinsfile"
+                                        nexusArtifactUploader(
+                                            nexusVersion: "nexus3",
+                                            protocol: "http",
+                                            nexusUrl: "192.168.56.2:8081",
+                                            groupId: "ft",
+                                            version: "${env.BUILD_NUMBER}",
+                                            repository: "maven-asukharukau",
+                                            credentialsId: 'nexusCredentialsId',
+                                            artifacts: [
+                                                [artifactId: "nexus-artifact-uploader",
+                                                classifier: 'debug',
+                                                file: "pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz",
+                                                type: 'tar.gz']
+                                            ] );
+                                    }
+                                    catch (error){
+                                        PIPE_STAGE_NAME = env.STAGE_NAME 
+                                        ERROR_MESSAGE = "${error}"
+                                        throw error
+                                    }
                                 }
-                                catch (error){
-                                    PIPE_STAGE_NAME = env.STAGE_NAME 
-                                    ERROR_MESSAGE = "${error}"
-                                    throw error
-                                }
-                            }
                             }
                 }
 
@@ -265,4 +265,4 @@ pipeline {
     }
 } 
 
-   
+    
