@@ -1,24 +1,48 @@
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-world-app-ingress
+  namespace: asukharukau
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: hello.world.app
+    http:
+      paths:
+      - path: /*
+        pathType: Prefix
+        backend:
+          service:
+            name: hello-world-app-service
+            port:
+              number: 80
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: hello-world-app-deploy
+  namespace: asukharukau
   labels:
-    app: myweb
-  name: myweb
+    app: hello-world
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
-      app: myweb
+      app: hello-world
   template:
     metadata:
       labels:
-        app: myweb
+        app: hello-world
     spec:
       containers:
-      - image: <IMAGE>
-        imagePullPolicy: Always
-        name: myweb
+      - name: hello-world-app
+        image: <IMAGE>
+        ports:
+        - containerPort: 8080
       imagePullSecrets:
       - name: nexus
 
@@ -26,15 +50,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    app: myweb
-  name: myweb
+  name: hello-world-app-service
+  namespace: asukharukau
 spec:
-  ports:
-  - nodePort: 32223
-    port: 80
-    protocol: TCP
-    targetPort: 80
-  selector:
-    app: myweb
   type: NodePort
+  selector:
+    app: hello-world
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30100
