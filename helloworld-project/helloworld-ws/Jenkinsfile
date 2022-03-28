@@ -14,6 +14,7 @@ pipeline {
     stages {
         stage ('Package') {
             steps {
+                script {
                 try {
                     // Get some code from a GitHub repository
                     git branch: 'asukharukau-final-task', url: 'https://github.com/cyxopykov/build-t00ls-1.git'
@@ -27,6 +28,7 @@ pipeline {
                     PIPE_STAGE_NAME = env.STAGE_NAME 
                     ERROR_MESSAGE = "${error}"
                     throw error
+                }
                 }
             }
         }
@@ -170,7 +172,8 @@ pipeline {
                 }
 
                 stage('Creating Docker Image') {
-                    steps{
+                    steps {
+                        script {
                         try {
                             sh '''
                                 docker build -f helloworld-project/helloworld-ws/Dockerfile -t 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER -t 192.168.56.2:5000/helloworld-asukharukau:latest .
@@ -183,6 +186,7 @@ pipeline {
                             PIPE_STAGE_NAME = env.STAGE_NAME 
                             ERROR_MESSAGE = "${error}"
                             throw error
+                        }
                         }
                     }
                 }
