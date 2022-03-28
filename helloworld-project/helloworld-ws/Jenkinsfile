@@ -3,6 +3,8 @@ pipeline {
     
     environment {
         currentDate = sh(returnStdout: true, script: 'date +%Y-%m-%d').trim()
+        PIPE_STAGE_NAME = ''
+        ERROR_MESSAGE = ''
     }
  
     
@@ -14,12 +16,19 @@ pipeline {
     stages {
         stage('Package') {
             steps {
-                // Get some code from a GitHub repository
-                git branch: 'asukharukau-final-task', url: 'https://github.com/cyxopykov/build-t00ls-1.git'
+                try {
+                    // Get some code from a GitHub repository
+                    git branch: 'asukharukau-final-task', url: 'https://github.com/cyxopykov/build-t00ls-1.git'
 
-                // Run Maven on a Unix agent.
-                dir('helloworld-project/helloworld-ws/') {
-                  sh 'mvn -Dmaven.test.failure.ignore=true clean package'
+                    // Run Maven on a Unix agent.
+                    dir('helloworld-project/helloworld-ws/') {
+                      sh 'mvn -Dmaven.test.failure.ignore=true clean package'
+                }
+                catch (error){
+                    PIPE_STAGE_NAME = env.STAGE_NAME 
+                    ERROR_MESSAGE = "${error}"
+                    throw error
+                }
                 }
 
             }
@@ -30,18 +39,25 @@ pipeline {
         stage ('Scan Sonar') {
             steps{
             script {
-                echo "Start Sonar Scan"
-                dir('helloworld-project/helloworld-ws/') {
-                withSonarQubeEnv('sonarqube') {
-                    sh "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar \
-                            -Dsonar.projectKey=sonar-final-task \
-                            -Dsonar.host.url=http://192.168.56.2:9000 \
-                            -Dsonar.language=java -Dsonar.qualitygate.wait=true \
-                            -Dsonar.projectVersion=1.0 \
-                            -Dsonar.java.binaries=target \
-                            -Dsonar.sources=src/main/ \
-                            -Dsonar.tests=src/test/ "
+                try {
+                    echo "Start Sonar Scan"
+                    dir('helloworld-project/helloworld-ws/') {
+                    withSonarQubeEnv('sonarqube') {
+                        sh "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar \
+                                -Dsonar.projectKey=sonar-final-task \
+                                -Dsonar.host.url=http://192.168.56.2:9000 \
+                                -Dsonar.language=java -Dsonar.qualitygate.wait=true \
+                                -Dsonar.projectVersion=1.0 \
+                                -Dsonar.java.binaries=target \
+                                -Dsonar.sources=src/main/ \
+                                -Dsonar.tests=src/test/ "
+                    }
+                    }
                 }
+                 catch (error){
+                    PIPE_STAGE_NAME = env.STAGE_NAME 
+                    ERROR_MESSAGE = "${error}"
+                    throw error
                 }
             }
             }
@@ -53,8 +69,15 @@ pipeline {
                 stage('pre-integration-test') {
                     steps{
                     script {
-                        dir('helloworld-project/helloworld-ws/') {
-                            sh 'echo mvn pre-integration-test' 
+                        try {
+                            dir('helloworld-project/helloworld-ws/') {
+                                sh 'echo mvn pre-integration-test' 
+                            }
+                        }
+                        catch (error){
+                            PIPE_STAGE_NAME = env.STAGE_NAME 
+                            ERROR_MESSAGE = "${error}"
+                            throw error
                         }
                     }
                     }
@@ -63,8 +86,15 @@ pipeline {
                 stage('integration-test') {
                     steps{
                     script {
-                        dir('helloworld-project/helloworld-ws/') {
-                            sh 'echo mvn integration-test' 
+                        try {
+                            dir('helloworld-project/helloworld-ws/') {
+                                sh 'echo mvn integration-test' 
+                            }
+                        }
+                        catch (error){
+                            PIPE_STAGE_NAME = env.STAGE_NAME 
+                            ERROR_MESSAGE = "${error}"
+                            throw error
                         }
                     }
                     }
@@ -73,8 +103,15 @@ pipeline {
                 stage('post-integration-test') {
                     steps{
                     script {
-                        dir('helloworld-project/helloworld-ws/') {
-                            sh 'echo mvn post-integration-test' 
+                        try {
+                            dir('helloworld-project/helloworld-ws/') {
+                                sh 'echo mvn post-integration-test' 
+                            }
+                        }
+                        catch (error){
+                            PIPE_STAGE_NAME = env.STAGE_NAME 
+                            ERROR_MESSAGE = "${error}"
+                            throw error
                         }
                     }
                     }
@@ -85,13 +122,20 @@ pipeline {
         stage('Triggering job and fetching artefact') {
           steps{
             script{
-                build job: 'MNTLAB-asukharukau-child1-build-job', 
-                  parameters: [
-                    string(name: 'BRANCH_NAME', value: 'asukharukau')
-                  ],
-                  wait : true
-                  copyArtifacts fingerprintArtifacts: true, 
-                    projectName: 'MNTLAB-asukharukau-child1-build-job', selector: lastSuccessful()           
+                try {
+                    build job: 'MNTLAB-asukharukau-child1-build-job', 
+                      parameters: [
+                        string(name: 'BRANCH_NAME', value: 'asukharukau')
+                      ],
+                      wait : true
+                      copyArtifacts fingerprintArtifacts: true, 
+                        projectName: 'MNTLAB-asukharukau-child1-build-job', selector: lastSuccessful()   
+                }
+                catch (error){
+                            PIPE_STAGE_NAME = env.STAGE_NAME 
+                            ERROR_MESSAGE = "${error}"
+                            throw error
+                }
             }
           }
         }
@@ -101,35 +145,49 @@ pipeline {
                 stage('Archiving artifact') {
                             steps{
                             script {
-                                 sh "tar -czvf pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz asukharukau_dsl_script.tar.gz \
-                                                                                               helloworld-project/helloworld-ws/target/helloworld-ws.war \
-                                                                                               helloworld-project/helloworld-ws/Jenkinsfile"
-                                 nexusArtifactUploader(
-                                    nexusVersion: "nexus3",
-                                    protocol: "http",
-                                    nexusUrl: "192.168.56.2:8081",
-                                    groupId: "ft",
-                                    version: "${env.BUILD_NUMBER}",
-                                    repository: "maven-asukharukau",
-                                    credentialsId: 'nexusCredentialsId',
-                                    artifacts: [
-                                        [artifactId: "nexus-artifact-uploader",
-                                        classifier: 'debug',
-                                        file: "pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz",
-                                        type: 'tar.gz']
-                                    ] );
+                                try {
+                                     sh "tar -czvf pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz asukharukau_dsl_script.tar.gz \
+                                                                                                   helloworld-project/helloworld-ws/target/helloworld-ws.war \
+                                                                                                   helloworld-project/helloworld-ws/Jenkinsfile"
+                                     nexusArtifactUploader(
+                                        nexusVersion: "nexus3",
+                                        protocol: "http",
+                                        nexusUrl: "192.168.56.2:8081",
+                                        groupId: "ft",
+                                        version: "${env.BUILD_NUMBER}",
+                                        repository: "maven-asukharukau",
+                                        credentialsId: 'nexusCredentialsId',
+                                        artifacts: [
+                                            [artifactId: "nexus-artifact-uploader",
+                                            classifier: 'debug',
+                                            file: "pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz",
+                                            type: 'tar.gz']
+                                        ] );
+                                }
+                                catch (error){
+                                    PIPE_STAGE_NAME = env.STAGE_NAME 
+                                    ERROR_MESSAGE = "${error}"
+                                    throw error
+                                }
                             }
                             }
                 }
 
                 stage('Creating Docker Image') {
                     steps{
-                        sh '''
-                            docker build -f helloworld-project/helloworld-ws/Dockerfile -t 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER -t 192.168.56.2:5000/helloworld-asukharukau:latest .
-                            docker login -u ${nexus_user} -p ${nexus_password} 192.168.56.2:5000
-                            docker push 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER
-                            docker push 192.168.56.2:5000/helloworld-asukharukau:latest
-                        '''
+                        try {
+                            sh '''
+                                docker build -f helloworld-project/helloworld-ws/Dockerfile -t 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER -t 192.168.56.2:5000/helloworld-asukharukau:latest .
+                                docker login -u ${nexus_user} -p ${nexus_password} 192.168.56.2:5000
+                                docker push 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER
+                                docker push 192.168.56.2:5000/helloworld-asukharukau:latest
+                            '''
+                        }
+                        catch (error){
+                            PIPE_STAGE_NAME = env.STAGE_NAME 
+                            ERROR_MESSAGE = "${error}"
+                            throw error
+                        }
                     }
                 }
             }
@@ -138,9 +196,16 @@ pipeline {
         stage('Manual approval') {
             steps {
                 script {
-                    timeout(time:30, unit:'SECONDS') {
-                        env.APPROVE_PROD = input message: 'Deploy to Production', ok: 'Continue'
+                    try {
+                        timeout(time:30, unit:'SECONDS') {
+                            env.APPROVE_PROD = input message: 'Deploy to Production', ok: 'Continue'
+                        }
                     }
+                    catch (error){
+                            PIPE_STAGE_NAME = env.STAGE_NAME 
+                            ERROR_MESSAGE = "${error}"
+                            throw error
+                    } 
                 }
             }
         }
@@ -149,39 +214,48 @@ pipeline {
           steps {
                            
               script {
-                    withKubeConfig([credentialsId: 'minikubeconfig']) {
-                        sh '''
-                            sed -i -e "s,<IMAGE>,192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER,g" ./helloworld-project/helloworld-ws/deploy.yaml
-                            curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
-                            chmod u+x ./kubectl
-                            ./kubectl create ns asukharukau || echo 'ns already exists!'
-                            ./kubectl create secret -n asukharukau docker-registry nexus --docker-server=192.168.56.2:5000 --docker-username=${nexus_user} --docker-password=${nexus_password} \
-                            || echo 'Secret already exists!'
-                            ./kubectl apply -f ./helloworld-project/helloworld-ws/deploy.yaml
-                        '''
-                    }
+                  try {
+                        withKubeConfig([credentialsId: 'minikubeconfig']) {
+                            sh '''
+                                sed -i -e "s,<IMAGE>,192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER,g" ./helloworld-project/helloworld-ws/deploy.yaml
+                                curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
+                                chmod u+x ./kubectl
+                                ./kubectl create ns asukharukau || echo 'ns already exists!'
+                                ./kubectl create secret -n asukharukau docker-registry nexus --docker-server=192.168.56.2:5000 --docker-username=${nexus_user} --docker-password=${nexus_password} \
+                                || echo 'Secret already exists!'
+                                ./kubectl apply -f ./helloworld-project/helloworld-ws/deploy.yaml
+                            '''
+                        }
+                  }
+                  catch (error){
+                            PIPE_STAGE_NAME = env.STAGE_NAME 
+                            ERROR_MESSAGE = "${error}"
+                            throw error
+                  } 
               }
               
               script {
-                    withKubeConfig([credentialsId: 'minikubeconfig']) {
-                        sh '''
-                            sleep 20
-                    
-                            if [[ $(curl -sSf http://192.168.49.2:30100/helloworld-ws/ > /dev/null) ]]
-                            then
-                              #rollback 
-                              ./kubectl rollout undo deployment/helloworld-deploy -n asukharukau
-                            fi
-                        '''
-                    }
+                  try {
+                        withKubeConfig([credentialsId: 'minikubeconfig']) {
+                            sh '''
+                                sleep 20
+
+                                if [[ $(curl -sSf http://192.168.49.2:30100/helloworld-ws/ > /dev/null) ]]
+                                then
+                                  #rollback 
+                                  ./kubectl rollout undo deployment/helloworld-deploy -n asukharukau
+                                fi
+                            '''
+                        }
+                  }
+                  catch (error){
+                            PIPE_STAGE_NAME = env.STAGE_NAME 
+                            ERROR_MESSAGE = "${error}"
+                            throw error
+                  } 
               }
-              
-              
           }
         }
-        
-        
-        
     }
     
     post {
