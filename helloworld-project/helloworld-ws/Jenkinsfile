@@ -104,7 +104,7 @@ pipeline {
                             groupId: "ft",
                             version: "${env.BUILD_NUMBER}",
                             repository: "maven-asukharukau",
-                            credentialsId: nexusCredentialsId,
+                            credentialsId: 'nexusCredentialsId',
                             artifacts: [
                                 [artifactId: "nexus-artifact-uploader",
                                 classifier: 'debug',
