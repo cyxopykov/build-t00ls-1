@@ -51,6 +51,41 @@ pipeline {
             }
         }
         
+        
+        stage('Testing') { 
+            parallel {
+                stage('pre-integration-test') {
+                    steps{
+                    script {
+                        dir('helloworld-project/helloworld-ws/') {
+                            sh 'echo mvn pre-integration-test' 
+                        }
+                    }
+                    }
+                }
+                
+                stage('integration-test') {
+                    steps{
+                    script {
+                        dir('helloworld-project/helloworld-ws/') {
+                            sh 'echo mvn integration-test' 
+                        }
+                    }
+                    }
+                }
+                
+                stage('post-integration-test') {
+                    steps{
+                    script {
+                        dir('helloworld-project/helloworld-ws/') {
+                            sh 'echo mvn post-integration-test' 
+                        }
+                    }
+                    }
+                }
+            }
+        }
+        
                 
         stage('Deploy App') {
           steps {
