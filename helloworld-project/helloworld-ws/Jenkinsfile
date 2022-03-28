@@ -1,11 +1,12 @@
 pipeline {
+    
     agent any
     environment {
         currentDate = sh(returnStdout: true, script: 'date +%Y-%m-%d').trim()
         PIPE_STAGE_NAME = ''
         ERROR_MESSAGE = ''
     }
-    
+
     tools {
         // Install the Maven version configured as "M3" and add it to the path.
         maven "mvn3"
@@ -15,24 +16,23 @@ pipeline {
         stage ('Package') {
             steps {
                 script {
-                try {
-                    // Get some code from a GitHub repository
-                    git branch: 'asukharukau-final-task', url: 'https://github.com/cyxopykov/build-t00ls-1.git'
+                    try {
+                        // Get some code from a GitHub repository
+                        git branch: 'asukharukau-final-task', url: 'https://github.com/cyxopykov/build-t00ls-1.git'
 
-                    // Run Maven on a Unix agent.
-                    dir('helloworld-project/helloworld-ws/') {
-                      sh 'mvn -Dmaven.test.failure.ignore=true clean package'
+                        // Run Maven on a Unix agent.
+                        dir('helloworld-project/helloworld-ws/') {
+                        sh 'mvn -Dmaven.test.failure.ignore=true clean package'
+                        }
                     }
-                }
-                catch (error){
-                    PIPE_STAGE_NAME = env.STAGE_NAME 
-                    ERROR_MESSAGE = "${error}"
-                    throw error
-                }
+                    catch (error) {
+                        PIPE_STAGE_NAME = env.STAGE_NAME 
+                        ERROR_MESSAGE = "${error}"
+                        throw error
+                    }
                 }
             }
         }
-    
 
         stage ('Scan Sonar') {
             steps {
@@ -52,7 +52,7 @@ pipeline {
                             }
                         }
                     }
-                    catch (error){
+                    catch (error) {
                         PIPE_STAGE_NAME = env.STAGE_NAME 
                         ERROR_MESSAGE = "${error}"
                         throw error
@@ -61,8 +61,7 @@ pipeline {
             }
         }
 
-
-        stage('Testing') { 
+        stage('Testing') {
             parallel {
                 stage('pre-integration-test') {
                     steps {
@@ -72,7 +71,7 @@ pipeline {
                                     sh 'echo mvn pre-integration-test' 
                                 }
                             }
-                            catch (error){
+                            catch (error) {
                                 PIPE_STAGE_NAME = env.STAGE_NAME 
                                 ERROR_MESSAGE = "${error}"
                                 throw error
@@ -80,7 +79,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('integration-test') {
                     steps {
                         script {
@@ -89,7 +88,7 @@ pipeline {
                                     sh 'echo mvn integration-test' 
                                 }
                             }
-                            catch (error){
+                            catch (error) {
                                 PIPE_STAGE_NAME = env.STAGE_NAME 
                                 ERROR_MESSAGE = "${error}"
                                 throw error
@@ -97,7 +96,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('post-integration-test') {
                     steps{
                         script {
@@ -106,7 +105,7 @@ pipeline {
                                     sh 'echo mvn post-integration-test' 
                                 }
                             }
-                            catch (error){
+                            catch (error) {
                                 PIPE_STAGE_NAME = env.STAGE_NAME 
                                 ERROR_MESSAGE = "${error}"
                                 throw error
@@ -116,7 +115,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Triggering job and fetching artefact') {
           steps {
             script {
@@ -129,7 +128,7 @@ pipeline {
                       copyArtifacts fingerprintArtifacts: true, 
                         projectName: 'MNTLAB-asukharukau-child1-build-job', selector: lastSuccessful()   
                 }
-                catch (error){
+                catch (error) {
                     PIPE_STAGE_NAME = env.STAGE_NAME 
                     ERROR_MESSAGE = "${error}"
                     throw error
@@ -137,10 +136,10 @@ pipeline {
             }
           }
         }
-        
-        stage('Packaging and Publishing results') { 
+
+        stage('Packaging and Publishing results') {
             parallel {
-                stage('Archiving artifact') {
+                stage ('Archiving artifact') {
                             steps {
                                 script {
                                     try {
@@ -162,7 +161,7 @@ pipeline {
                                                 type: 'tar.gz']
                                             ] );
                                     }
-                                    catch (error){
+                                    catch (error) {
                                         PIPE_STAGE_NAME = env.STAGE_NAME 
                                         ERROR_MESSAGE = "${error}"
                                         throw error
@@ -171,29 +170,29 @@ pipeline {
                             }
                 }
 
-                stage('Creating Docker Image') {
+                stage ('Creating Docker Image') {
                     steps {
                         script {
-                        try {
-                            sh '''
-                                docker build -f helloworld-project/helloworld-ws/Dockerfile -t 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER -t 192.168.56.2:5000/helloworld-asukharukau:latest .
-                                docker login -u ${nexus_user} -p ${nexus_password} 192.168.56.2:5000
-                                docker push 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER
-                                docker push 192.168.56.2:5000/helloworld-asukharukau:latest
-                            '''
-                        }
-                        catch (error){
-                            PIPE_STAGE_NAME = env.STAGE_NAME 
-                            ERROR_MESSAGE = "${error}"
-                            throw error
-                        }
+                            try {
+                                sh '''
+                                    docker build -f helloworld-project/helloworld-ws/Dockerfile -t 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER -t 192.168.56.2:5000/helloworld-asukharukau:latest .
+                                    docker login -u ${nexus_user} -p ${nexus_password} 192.168.56.2:5000
+                                    docker push 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER
+                                    docker push 192.168.56.2:5000/helloworld-asukharukau:latest
+                                '''
+                            }
+                            catch (error) {
+                                PIPE_STAGE_NAME = env.STAGE_NAME 
+                                ERROR_MESSAGE = "${error}"
+                                throw error
+                            }
                         }
                     }
                 }
             }
-        } 
-        
-        stage('Manual approval') {
+        }
+
+        stage ('Manual approval') {
             steps {
                 script {
                     try {
@@ -201,20 +200,19 @@ pipeline {
                             env.APPROVE_PROD = input message: 'Deploy to Production', ok: 'Continue'
                         }
                     }
-                    catch (error){
-                            PIPE_STAGE_NAME = env.STAGE_NAME 
-                            ERROR_MESSAGE = "${error}"
-                            throw error
-                    } 
+                    catch (error) {
+                        PIPE_STAGE_NAME = env.STAGE_NAME 
+                        ERROR_MESSAGE = "${error}"
+                        throw error
+                    }
                 }
             }
         }
-                
-        stage('Deployment') {
-          steps {
-                           
-              script {
-                  try {
+
+        stage ('Deployment') {
+            steps {
+                script {
+                    try {
                         withKubeConfig([credentialsId: 'minikubeconfig']) {
                             sh '''
                                 sed -i -e "s,<IMAGE>,192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER,g" ./helloworld-project/helloworld-ws/deploy.yaml
@@ -226,47 +224,44 @@ pipeline {
                                 ./kubectl apply -f ./helloworld-project/helloworld-ws/deploy.yaml
                             '''
                         }
-                  }
-                  catch (error){
-                            PIPE_STAGE_NAME = env.STAGE_NAME 
-                            ERROR_MESSAGE = "${error}"
-                            throw error
-                  } 
-              }
-              
-              script {
-                  try {
+                    }
+                    catch (error) {
+                        PIPE_STAGE_NAME = env.STAGE_NAME 
+                        ERROR_MESSAGE = "${error}"
+                        throw error
+                    }
+                }
+
+                script {
+                    try {
                         withKubeConfig([credentialsId: 'minikubeconfig']) {
                             sh '''
                                 sleep 20
 
                                 if [[ $(curl -sSf http://192.168.49.2:30100/helloworld-ws/ > /dev/null) ]]
                                 then
-                                  #rollback 
-                                  ./kubectl rollout undo deployment/helloworld-deploy -n asukharukau
+                                    #rollback 
+                                    ./kubectl rollout undo deployment/helloworld-deploy -n asukharukau
                                 fi
                             '''
                         }
-                  }
-                  catch (error){
+                    }
+                    catch (error) {
                             PIPE_STAGE_NAME = env.STAGE_NAME 
                             ERROR_MESSAGE = "${error}"
                             throw error
-                  } 
-              }
-          }
+                    }
+               }
+            }
         }
-
     }
-    
+
     post {
-                unsuccessful {
-                    emailext body: "Pipeline completed successfully ${env.BUILD_URL} - ${currentDate}", subject: "Pipeline: ${currentBuild.fullDisplayName} completed successfully", to: 'anatol_sukharukau@epam.com'
-                }
-                success {
-                    emailext body: "Pipeline completed successfully ${env.BUILD_URL} - ${currentDate}", subject: "Pipeline: ${currentBuild.fullDisplayName} completed successfully", to: 'anatol_sukharukau@epam.com'
-                }
+        unsuccessful {
+            emailext body: "Pipeline completed successfully ${env.BUILD_URL} - ${currentDate}", subject: "Pipeline: ${currentBuild.fullDisplayName} completed successfully", to: 'anatol_sukharukau@epam.com'
+        }
+        success {
+            emailext body: "Pipeline failed on stage ${PIPE_STAGE_NAME} : ${ERROR_MESSAGE} - ${currentDate}", subject: "Pipeline: ${currentBuild.fullDisplayName} completed successfully", to: 'anatol_sukharukau@epam.com'
+        }
     }
-} 
-
-    
+}
