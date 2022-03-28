@@ -80,13 +80,13 @@ pipeline {
         stage('Triggering job and fetching artefact') {
           steps{
             script{
-                build job: 'MNTLAB-asukharukau-child1-build-job', 
+                build job: 'DSL/MNTLAB-asukharukau-child1-build-job', 
                   parameters: [
                     string(name: 'BRANCH_NAME', value: 'asukharukau')
                   ],
                   wait : true
                   copyArtifacts fingerprintArtifacts: true, 
-                    projectName: 'MNTLAB-asukharukau-child1-build-job', selector: lastSuccessful()           
+                    projectName: 'DSL/MNTLAB-asukharukau-child1-build-job', selector: lastSuccessful()           
             }
           }
         }
