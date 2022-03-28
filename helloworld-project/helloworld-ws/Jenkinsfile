@@ -23,6 +23,7 @@ pipeline {
                     // Run Maven on a Unix agent.
                     dir('helloworld-project/helloworld-ws/') {
                       sh 'mvn -Dmaven.test.failure.ignore=true clean package'
+                    }
                 }
                 catch (error){
                     PIPE_STAGE_NAME = env.STAGE_NAME 
