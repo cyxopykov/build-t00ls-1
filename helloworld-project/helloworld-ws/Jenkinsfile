@@ -261,7 +261,7 @@ pipeline {
             emailext body: "Pipeline completed successfully ${env.BUILD_URL} - ${currentDate}", subject: "Pipeline: ${currentBuild.fullDisplayName} completed successfully", to: 'anatol_sukharukau@epam.com'
         }
         unsuccessful {
-            emailext body: "Pipeline failed on stage ${PIPE_STAGE_NAME} with ${ERROR_MESSAGE} - ${currentDate}", subject: "Pipeline: ${currentBuild.fullDisplayName} completed successfully", to: 'anatol_sukharukau@epam.com'
+            emailext body: "Pipeline failed on stage ${PIPE_STAGE_NAME} with ${ERROR_MESSAGE} - ${currentDate}", subject: "Pipeline: ${currentBuild.fullDisplayName} failed", to: 'anatol_sukharukau@epam.com'
         }
     }
 }
