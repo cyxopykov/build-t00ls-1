@@ -19,6 +19,8 @@ spec:
       - image: <IMAGE>
         imagePullPolicy: Always
         name: myweb
+      imagePullSecrets:
+      - name: nexus
 
 ---
 apiVersion: v1
