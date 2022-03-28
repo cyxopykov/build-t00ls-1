@@ -91,38 +91,42 @@ pipeline {
           }
         }
         
-        stage('Archiving') {
+        stage('Packaging and Publishing results') { 
+            parallel {
+                stage('Archiving artifact') {
+                            steps{
+                            script {
+                                 sh "tar -czvf pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz asukharukau_dsl_script.tar.gz \
+                                                                                               helloworld-project/helloworld-ws/target/helloworld-ws.war \
+                                                                                               helloworld-project/helloworld-ws/Jenkinsfile"
+                                 nexusArtifactUploader(
+                                    nexusVersion: "nexus3",
+                                    protocol: "http",
+                                    nexusUrl: "192.168.56.2:8081",
+                                    groupId: "ft",
+                                    version: "${env.BUILD_NUMBER}",
+                                    repository: "maven-asukharukau",
+                                    credentialsId: 'nexusCredentialsId',
+                                    artifacts: [
+                                        [artifactId: "nexus-artifact-uploader",
+                                        classifier: 'debug',
+                                        file: "pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz",
+                                        type: 'tar.gz']
+                                    ] );
+                            }
+                            }
+                }
+
+                stage('Creating Docker Image') {
                     steps{
-                    script {
-                         sh "tar -czvf pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz asukharukau_dsl_script.tar.gz \
-                                                                                       helloworld-project/helloworld-ws/target/helloworld-ws.war \
-                                                                                       helloworld-project/helloworld-ws/Jenkinsfile"
-                         nexusArtifactUploader(
-                            nexusVersion: "nexus3",
-                            protocol: "http",
-                            nexusUrl: "192.168.56.2:8081",
-                            groupId: "ft",
-                            version: "${env.BUILD_NUMBER}",
-                            repository: "maven-asukharukau",
-                            credentialsId: 'nexusCredentialsId',
-                            artifacts: [
-                                [artifactId: "nexus-artifact-uploader",
-                                classifier: 'debug',
-                                file: "pipeline-asukharukau-${env.BUILD_NUMBER}.tar.gz",
-                                type: 'tar.gz']
-                            ] );
+                        sh '''
+                            docker build -f helloworld-project/helloworld-ws/Dockerfile -t 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER -t 192.168.56.2:5000/helloworld-asukharukau:latest .
+                            docker login -u ${nexus_user} -p ${nexus_password} 192.168.56.2:5000
+                            docker push 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER
+                            docker push 192.168.56.2:5000/helloworld-asukharukau:latest
+                        '''
                     }
-                    }
-        }
-        
-        stage('Building image') {
-            steps{
-                sh '''
-                    docker build -f helloworld-project/helloworld-ws/Dockerfile -t 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER -t 192.168.56.2:5000/helloworld-asukharukau:latest .
-                    docker login -u ${nexus_user} -p ${nexus_password} 192.168.56.2:5000
-                    docker push 192.168.56.2:5000/helloworld-asukharukau:$BUILD_NUMBER
-                    docker push 192.168.56.2:5000/helloworld-asukharukau:latest
-                '''
+                }
             }
         }
                 
