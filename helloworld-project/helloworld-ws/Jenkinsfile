@@ -186,6 +186,7 @@ pipeline {
                 success {
                     emailext body: 'Test Message', subject: 'Test Subject', to: 'anatol_sukharukau@epam.com'
                 }
+    }
     
 }
     
