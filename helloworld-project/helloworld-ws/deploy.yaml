@@ -2,44 +2,47 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: hello-world-app-ingress
+  name: helloworld-ingress
   namespace: asukharukau
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: hello.world.app
+  - host: helloworld.by
     http:
       paths:
       - path: /*
         pathType: Prefix
         backend:
           service:
-            name: hello-world-app-service
+            name: helloworld-service
             port:
               number: 80
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hello-world-app-deploy
+  name: helloworld-deploy
   namespace: asukharukau
   labels:
-    app: hello-world
+    app: helloworld
 spec:
   replicas: 1
-  strategy:
-    type: Recreate
+  strategy: 
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1 
+      maxUnavailable: 1
   selector:
     matchLabels:
-      app: hello-world
+      app: helloworld
   template:
     metadata:
       labels:
-        app: hello-world
+        app: helloworld
     spec:
       containers:
-      - name: hello-world-app
+      - name: helloworld
         image: <IMAGE>
         ports:
         - containerPort: 8080
@@ -50,12 +53,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: hello-world-app-service
+  name: helloworld-service
   namespace: asukharukau
 spec:
   type: NodePort
   selector:
-    app: hello-world
+    app: helloworld
   ports:
     - port: 8080
       targetPort: 8080
