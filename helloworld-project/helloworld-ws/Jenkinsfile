@@ -155,7 +155,23 @@ pipeline {
                             ./kubectl apply -f ./helloworld-project/helloworld-ws/deploy.yaml
                         '''
                     }
-                }
+              }
+              
+              script {
+                    withKubeConfig([credentialsId: 'minikubeconfig']) {
+                        sh '''
+                            sleep 20
+                    
+                            if [[ $(curl -sSf http://192.168.56.2:${port}/helloworld-ws/ > /dev/null) ]]
+                            then
+                              #rollback 
+                              ./kubectl rollout undo deployment/helloworld-deploy -n asukharukau
+                            fi
+                        '''
+                    }
+              }
+              
+              
           }
         }
         
