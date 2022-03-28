@@ -12,7 +12,7 @@ pipeline {
     }
 
     stages {
-        stage('Package') {
+        stage ('Package') {
             steps {
                 try {
                     // Get some code from a GitHub repository
@@ -30,36 +30,36 @@ pipeline {
                 }
             }
         }
-    }
+    
 
         stage ('Scan Sonar') {
-            steps{
-            script {
-                try {
-                    echo "Start Sonar Scan"
-                    dir('helloworld-project/helloworld-ws/') {
-                    withSonarQubeEnv('sonarqube') {
-                        sh "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar \
-                                -Dsonar.projectKey=sonar-final-task \
-                                -Dsonar.host.url=http://192.168.56.2:9000 \
-                                -Dsonar.language=java -Dsonar.qualitygate.wait=true \
-                                -Dsonar.projectVersion=1.0 \
-                                -Dsonar.java.binaries=target \
-                                -Dsonar.sources=src/main/ \
-                                -Dsonar.tests=src/test/ "
+            steps {
+                script {
+                    try {
+                        echo "Start Sonar Scan"
+                        dir('helloworld-project/helloworld-ws/') {
+                            withSonarQubeEnv('sonarqube') {
+                                sh "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar \
+                                        -Dsonar.projectKey=sonar-final-task \
+                                        -Dsonar.host.url=http://192.168.56.2:9000 \
+                                        -Dsonar.language=java -Dsonar.qualitygate.wait=true \
+                                        -Dsonar.projectVersion=1.0 \
+                                        -Dsonar.java.binaries=target \
+                                        -Dsonar.sources=src/main/ \
+                                        -Dsonar.tests=src/test/ "
+                            }
+                        }
                     }
+                    catch (error){
+                        PIPE_STAGE_NAME = env.STAGE_NAME 
+                        ERROR_MESSAGE = "${error}"
+                        throw error
                     }
                 }
-                 catch (error){
-                    PIPE_STAGE_NAME = env.STAGE_NAME 
-                    ERROR_MESSAGE = "${error}"
-                    throw error
-                }
-            }
             }
         }
-        
-        
+
+
         stage('Testing') { 
             parallel {
                 stage('pre-integration-test') {
@@ -253,7 +253,7 @@ pipeline {
           }
         }
 
-    
+    }
     
     post {
                 unsuccessful {
@@ -265,4 +265,4 @@ pipeline {
     }
 } 
 
-    
+   
