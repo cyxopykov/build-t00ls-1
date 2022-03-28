@@ -167,7 +167,7 @@ pipeline {
                         sh '''
                             sleep 20
                     
-                            if [[ $(curl -sSf http://192.168.56.2:${port}/helloworld-ws/ > /dev/null) ]]
+                            if [[ $(curl -sSf http://192.168.49.2:30100/helloworld-ws/ > /dev/null) ]]
                             then
                               #rollback 
                               ./kubectl rollout undo deployment/helloworld-deploy -n asukharukau
